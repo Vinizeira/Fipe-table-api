@@ -1,82 +1,53 @@
-# 🎧 Audio Application
+# 🚗 FIPE Table API
 
-> A Java console application that simulates an audio streaming platform where users can search for music and podcasts, rate content, manage favorites, and persist listening history using a layered architecture.
+> A Spring Boot CLI application that queries the FIPE vehicle price table, allowing users to search cars, motorcycles, and trucks by brand, model, and year — returning average market prices for all available years at once.
 
 <p align="left">
-  <img src="https://img.shields.io/badge/Java-25-red?style=for-the-badge" alt="Java 25" />
-  <img src="https://img.shields.io/badge/Maven-Wrapper-blue?style=for-the-badge" alt="Maven Wrapper" />
-  <img src="https://img.shields.io/badge/Tests-JUnit%205-success?style=for-the-badge" alt="JUnit 5" />
-  <img src="https://img.shields.io/badge/API-iTunes-lightgrey?style=for-the-badge" alt="iTunes API" />
+  <img src="https://img.shields.io/badge/Java-26-red?style=for-the-badge" alt="Java 26" />
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.0.6-brightgreen?style=for-the-badge" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/Jackson-Databind-orange?style=for-the-badge" alt="Jackson" />
+  <img src="https://img.shields.io/badge/API-FIPE-blue?style=for-the-badge" alt="FIPE API" />
 </p>
 
 ---
 
 ## 📌 About the Project
 
-This project was built independently as part of my Java learning journey.
+This project was built as part of an Alura Java challenge.
 
-Instead of only following tutorials, I first designed the structure of the application and then implemented it step by step, improving architecture, code quality, and testability over time.
+Instead of just viewing prices year by year like the official FIPE website, this application lists the average market price for **all available years** of a chosen model at once.
 
-The main goal is to practice Object-Oriented Programming in a real evolving project, not just in isolated examples.
+The main goal is to practice Spring Boot fundamentals, REST API consumption, JSON deserialization with Jackson, and clean layered architecture in a real project.
 
 ---
 
 ## 🚀 Features
 
-### Core Features
-
-- 🎵 Search music via iTunes API
-- 🎙️ Search podcasts via iTunes API
-- ⭐ Rate audio results from `0` to `5`
-- ❤️ Filter favorites with `rating >= 3`
-- 🛡️ Prevent duplicate entries by identity
-- 💾 Persist history in `data/History.json`
-- 🔒 Save history safely using temporary file replacement
-- 🧯 Handle invalid input and API failures
-- 🧠 Keep responsibilities separated with a layered design
-
-### Current Engineering Improvements
-
-- Shared `Audio` base class
-- `Playable` contract with identity comparison
-- `AudioWorkflowService` to keep `Main` lean
-- Centralized update and persistence flow in `AudioManagerService`
-- `org.json` for persistence and API parsing
-- Config constants isolated in `AppConfig`
-- Maven Wrapper included
-- Unit and repository tests with fake HTTP client
+- 🚗 Search by vehicle type: cars, motorcycles, or trucks
+- 🏷️ List all available brands for the chosen type
+- 🔍 Filter models by name fragment (case-insensitive)
+- 📅 Display average FIPE price for **all available years** of a model
+- ⚙️ Clean layered architecture with separated responsibilities
+- 🔄 Single reusable HTTP client for all API calls
 
 ---
 
 ## 🏗️ Architecture
 
-The project follows a layered architecture:
-
 ```text
-Main (Application Entry Point)
+Main (CommandLineRunner — Application Entry Point)
 │
 ├── Service Layer
-│   ├── AudioWorkflowService
-│   ├── AudioManagerService
-│   ├── FavoritesService
-│   ├── MenuService
-│   ├── MusicService
-│   └── PodcastService
+│   └── FipeService          → Deserialization logic
 │
-├── Repository Layer
-│   ├── ITunesSearchRepository
-│   ├── MusicRepository
-│   ├── PodcastRepository
-│   └── HistoryRepository
+├── Util Layer
+│   └── ApiConsumer          → HTTP requests
 │
-├── Model Layer
-│   ├── Audio
-│   ├── Music
-│   ├── Podcast
-│   └── Playable
-│
-└── Config Layer
-    └── AppConfig
+└── Model Layer
+    ├── Brand                → Brand data
+    ├── Model                → Model and year data
+    ├── ModelList            → Wrapper for models endpoint
+    └── Vehicle              → Full vehicle pricing data
 ```
 
 ---
@@ -85,102 +56,64 @@ Main (Application Entry Point)
 
 ```text
 src/
-├── main/
-│   └── java/
-│       └── com/vn/
-│           ├── config/
-│           │   └── AppConfig.java
-│           ├── model/
-│           │   ├── Audio.java
-│           │   ├── Music.java
-│           │   ├── Podcast.java
-│           │   └── Playable.java
-│           ├── repository/
-│           │   ├── HistoryRepository.java
-│           │   ├── ITunesSearchException.java
-│           │   ├── ITunesSearchRepository.java
-│           │   ├── MusicRepository.java
-│           │   └── PodcastRepository.java
-│           ├── service/
-│           │   ├── AudioManagerService.java
-│           │   ├── AudioUpdateResult.java
-│           │   ├── AudioWorkflowService.java
-│           │   ├── FavoritesService.java
-│           │   ├── MenuService.java
-│           │   ├── MusicService.java
-│           │   └── PodcastService.java
-│           └── Main.java
-└── test/
+└── main/
     └── java/
-        └── com/vn/
+        └── com/project/tabelafip/
+            ├── model/
+            │   ├── Brand.java
+            │   ├── Model.java
+            │   ├── ModelList.java
+            │   └── Vehicle.java
+            ├── service/
+            │   └── FipeService.java
+            ├── util/
+            │   └── ApiConsumer.java
+            ├── principal/
+            │   └── Main.java
+            └── TabelafipApplication.java
 ```
 
 ---
 
-## ⭐ Rating System
+## 🔎 How It Works
 
-Favorites are determined using a simple rule:
+The application follows this flow:
 
 ```text
-rating >= 3
+1. User selects vehicle type (car / motorcycle / truck)
+2. App fetches and lists all brands
+3. User selects a brand by code
+4. App fetches and lists all models
+5. User types a name fragment to filter models
+6. User selects a model by code
+7. App fetches all available years
+8. App fetches and displays FIPE price for every year
 ```
-
-Example:
-
-| Title | Rating | Favorite |
-|------|--------|----------|
-| Wonderwall | 4 ⭐ | Yes |
-| Boulevard of Broken Dreams | 2 ⭐ | No |
-| The Alibi | 5 ⭐ | Yes |
 
 ---
 
 ## 💡 OOP Concepts Applied
 
-### Encapsulation
-
-State is controlled through constructors, getters, and specific update methods.
-
-```java
-audio.getTitle();
-audio.getRating();
-music.setRating(5);
-```
-
-### Polymorphism
-
-Different audio types are handled using a common contract:
+### Records
+All model classes are Java Records — immutable data carriers ideal for API response mapping.
 
 ```java
-List<Playable>
+public record Brand(
+    @JsonAlias("codigo") String code,
+    @JsonAlias("nome") String name
+) {}
 ```
 
-This allows shared logic to work with both `Music` and `Podcast`.
+### Generics
+`FipeService` uses generic methods to deserialize any type without duplication:
 
-### Interfaces
+```java
+public <T> T parseJson(String json, Class<T> type) { ... }
+public <T> List<T> parseJsonList(String json, Class<T> type) { ... }
+```
 
-`Playable` defines the shared behavior contract for audio entities.
-
-### Inheritance
-
-`Audio` centralizes common state and behavior shared by `Music` and `Podcast`.
-
----
-
-## 🧪 Tests
-
-The project currently includes coverage for:
-
-- audio identity rules
-- duplicate prevention
-- rating updates
-- favorites filtering
-- history persistence round-trip
-- music repository mapping
-- podcast repository mapping
-- invalid API status handling
-- invalid JSON handling
-- network failure handling
+### Dependency Injection
+Spring manages all dependencies via `@Autowired`, `@Service`, and `@Component`.
 
 ---
 
@@ -189,82 +122,65 @@ The project currently includes coverage for:
 Clone the repository:
 
 ```bash
-git clone https://github.com/Vinizeira/audio-application
-cd audio-application
+git clone https://github.com/Vinizeira/Fipe-table-api
+cd Fipe-table-api
 ```
 
-### Option 1: PowerShell script
+Run with Maven Wrapper:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run.ps1
+```bash
+./mvnw spring-boot:run
 ```
 
-### Option 2: Maven Wrapper
+Or run `TabelafipApplication.java` directly from IntelliJ IDEA.
 
-Run tests:
+---
 
-```powershell
-.\mvnw.cmd test
-```
+## 🌐 API Reference
+
+This project consumes the public FIPE API v1:
+
+| Endpoint | Description |
+|----------|-------------|
+| `/carros/marcas` | List car brands |
+| `/motos/marcas` | List motorcycle brands |
+| `/caminhoes/marcas` | List truck brands |
+| `/{type}/marcas/{brandId}/modelos` | List models by brand |
+| `/{type}/marcas/{brandId}/modelos/{modelId}/anos` | List available years |
+| `/{type}/marcas/{brandId}/modelos/{modelId}/anos/{yearId}` | Get price for year |
+
+Base URL: `https://parallelum.com.br/fipe/api/v1`
 
 ---
 
 ## 🛠️ Technologies
 
-- Java 25
+- Java 26
+- Spring Boot 4.0.6
+- Jackson Databind
 - Maven Wrapper
-- org.json
-- JUnit 5
-- iTunes Search API
-- Git
-- GitHub
+- FIPE Public API v1
 - IntelliJ IDEA
+- Git / GitHub
 
 ---
 
 ## 🗺️ Development Roadmap
 
 ### Level 1 — MVP
-
-- [x] Core audio models
-- [x] API integration
-- [x] Favorites system
-- [x] JSON persistence
-- [x] Console interface
-- [x] Basic error handling
-
-### Level 2 — Code Quality
-
-- [x] Reduce duplication
-- [x] Clean `Main`
-- [x] Create shared `Audio` base class
-- [x] Improve service responsibilities
-- [x] Improve input validation
-
-### Level 3 — Architecture Improvements
-
-- [x] Separate config constants
-- [x] Introduce better workflow orchestration
-- [x] Improve repository abstraction
-- [x] Add custom integration exception
-- [x] Make repositories test-friendly
-
-### Level 4 — Robustness and Maintainability
-
-- [x] Add JUnit test suite
-- [x] Test repositories without real network
-- [x] Handle invalid JSON and connection failures
-- [x] Add Maven Wrapper
-- [x] Improve documentation
+- [x] Project setup with Spring Boot
+- [x] API consumer with Java HttpClient
+- [x] JSON deserialization with Jackson
+- [x] Brand listing by vehicle type
+- [x] Model listing by brand
+- [x] Model filter by name fragment
+- [x] Price listing for all available years
 
 ### Future Expansion
-
-- [ ] Search filters
-- [ ] Statistics dashboard
-- [ ] Export functionality
-- [ ] End-to-end console flow tests
-- [ ] Logging system
-- [ ] CI pipeline
+- [ ] Export results to CSV or JSON file
+- [ ] Add input validation and error messages
+- [ ] Add logging
+- [ ] Web interface with Spring Web
 
 ---
 
@@ -272,26 +188,14 @@ Run tests:
 
 This project is used to practice:
 
-- Object-Oriented Programming
-- Clean Code
+- Spring Boot fundamentals
+- REST API consumption
+- JSON deserialization with Jackson
 - Layered architecture
-- API integration
-- Error handling
-- Data persistence
-- Automated testing
-- Software evolution practices
-- Git workflow
-
----
-
-## 🔮 Future Improvements
-
-- End-to-end application tests
-- Statistics features
-- Export to JSON / CSV
-- Logging framework
-- CI automation
-- Dependency injection concepts
+- Java Records
+- Generics
+- Dependency injection
+- Clean code principles
 
 ---
 
@@ -301,7 +205,7 @@ This project is used to practice:
 Learn concept → Apply in project → Refactor → Improve architecture
 ```
 
-This project evolves together with my learning process.
+This project was built step by step, applying each concept as it was learned.
 
 ---
 
@@ -309,4 +213,4 @@ This project evolves together with my learning process.
 
 **Vinicius Pereira**
 
-Java Developer
+Java Backend Developer
