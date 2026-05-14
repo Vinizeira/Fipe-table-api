@@ -12,9 +12,7 @@
 ---
 
 ## 📌 About the Project
-
-This project was built as part of an Alura Java challenge.
-
+.
 Instead of just viewing prices year by year like the official FIPE website, this application lists the average market price for **all available years** of a chosen model at once.
 
 The main goal is to practice Spring Boot fundamentals, REST API consumption, JSON deserialization with Jackson, and clean layered architecture in a real project.
